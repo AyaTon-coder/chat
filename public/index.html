@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Socket.IO Chat</title>
+    <link rel="stylesheet" href="index.css" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- PWA関連のタグ -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#007bff" />
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png" />
+  </head>
+
+  <body>
+    <div class="container" id="authContainer">
+      <div class="title">ルーム選択</div>
+      <input type="text" id="roomInput" placeholder="ルーム名を入力" />
+      <input
+        type="password"
+        id="passwordInput"
+        placeholder="パスワードを入力 (必要に応じて)"
+      />
+      <button onclick="authenticate()">入室</button>
+    </div>
+
+    <div class="container" id="passwordContainer">
+      <div class="title">新しいルームを追加</div>
+      <input type="text" id="newRoomInput" placeholder="新しいルーム名を入力" />
+      <input
+        type="password"
+        id="newPasswordInput"
+        placeholder="新しいパスワードを入力 (必要に応じて)"
+      />
+      <button onclick="addPassword()">追加</button>
+    </div>
+
+    <div class="container" id="chatContainer" style="display: none">
+      <div class="title">
+        チャット
+        <button id="backButton" onclick="backToRoomSelection()">
+          ルームに戻る
+        </button>
+      </div>
+      <div class="contents scroll" id="chat"></div>
+      <div class="contents input">
+        <div>
+          <input class="name" type="text" id="nameInput" placeholder="name" />
+        </div>
+        <div>
+          <input class="msg" type="text" id="msgInput" placeholder="message" />
+        </div>
+        <button onclick="sendMessage()">▶</button>
+      </div>
+    </div>
+
+    <!-- スクリプトの読み込み -->
+    <script src="/socket.io.min.js"></script>
+    <script src="/index.js"></script>
+
+    <!-- サービスワーカーの登録 -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/service-worker.js")
+          .then(function (registration) {
+            console.log(
+              "Service Worker registered with scope:",
+              registration.scope
+            );
+          })
+          .catch(function (error) {
+            console.log("Service Worker registration failed:", error);
+          });
+      }
+    </script>
+
+    <!-- ホーム画面に追加プロンプトのカスタマイズ -->
+    <script>
+      let deferredPrompt;
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        // プロンプトの表示を防ぐ
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // ここで「ホーム画面に追加」ボタンを表示するなどのカスタム動作が可能
+        const addBtn = document.createElement("button");
+        addBtn.innerText = "ホーム画面に追加";
+        addBtn.addEventListener("click", () => {
+          deferredPrompt.prompt(); // プロンプトを表示
+          deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === "accepted") {
+              console.log("ユーザーがホーム画面に追加を承諾しました");
+            } else {
+              console.log("ユーザーがホーム画面に追加を拒否しました");
+            }
+            deferredPrompt = null;
+          });
+        });
+        document.body.appendChild(addBtn);
+      });
+    </script>
+  </body>
+</html>
